@@ -1,13 +1,13 @@
 /* ------------------------------- TDAs --------------------------------------------
  * TDAUsuarioA=[Nombre,contraseña]
- * TDAUsuarios=[ID,nombre,Contraseña,Seguidores,QuienMesigue,[PCompartidasConmigo]]
- * TDAPublicacion=[ID,Date,Autor,Tipo,Contenido]
- * TDAlistaUsuarios=[[username1,pass1],[usernarme2,pass2],...,[usernameN,passN]]
- * TDAlistaPublicacion=[[TDAPublicacion1],[TDAPublicacion2],...,[TDAPublicaionN]]
- * TDASOCIALNETWORK=[Date,nombre,[[TDAUsuarioA],[TDAlistaUsuarios],[TDAlistaPublicacion]],SOut]
- * PCompartidasConmigo=[[TDAPublicacion1],[TDAPublicacion2],...,[TDAPublicacionN]]
- * Date=[dd,mm,aaaa]
-*/
+ *TDAUsuarios=[ID,nombre,Contraseña,[Seguidores],[QuienMesigue],[PCompartidasConmigo]]
+ *TDAPublicacion=[ID,Date,Autor,Tipo,Contenido]
+ *TDAlistaUsuarios=[[username1,pass1],[usernarme2,pass2],...,[usernameN,passN]]
+ *TDAlistaPublicacion=[[TDAPublicacion1],[TDAPublicacion2],...,[TDAPublicaionN]]
+ *TDASOCIALNETWORK=[Date,nombre,[TDAUsuarioA],[TDAlistaUsuarios],[TDAlistaPublicacion]],SOut]
+ *PCompartidasConmigo=[[TDAPublicacion1],[TDAPublicacion2],...,[TDAPublicacionN]]
+ *Date=[dd,mm,aaaa]
+ */
 /*-------------------------------- DOMINIOS ------------------------------------- */
 
 /*
@@ -24,4 +24,107 @@
  *     con un año maximo 2021, mes varia entre 1 y 11 y dia entre 1 y 30
  */
 
-socialnetwork([dd,mm,aaaa],nombre,[usuarioA],[usuarios],[publicaciones],sOut).
+% CONSTRUCTOR SOCIALNETWORK
+
+socialnetwork(Nombre,[DD,MM,AAAA],Sout):-
+    string(Nombre),
+    integer(DD),DD>0,DD<31,
+    integer(MM),MM<13,MM>0,
+    integer(AAAA),AAAA<2022,AAAA>0,
+    Sout=[Nombre,[DD,MM,AAAA],[],[],[]].
+
+
+% PERTENENCIA SOCIALNETWORK
+
+isSocialNetwork(Nombre,[DD,MM,AAAA],UsuarioActivo,Usuarios,Publicaciones):-
+    string(Nombre),
+    isDate(DD,MM,AAAA),
+    isUsuarioActivo(UsuarioActivo).
+
+isDate(DD,MM,AAAA):-
+    integer(DD),
+    integer(MM),
+    integer(AAAA).
+
+isUsuarioActivo([Cabeza|Cola]):-
+    string(Cabeza),
+    string(Cola).
+
+% SELECTOR SOCIALNETWORK
+
+selectorNombre([Nombre,_,_,_,_],NombreSn):-
+    NombreSn = Nombre.
+
+selectorFecha([_,Fecha,_,_,_],FechaSn):-
+    FechaSn = Fecha.
+
+selectorUActivo([_,_,UA,_,_],UASn):-
+    UASn = UA.
+
+selectorUsuarios([_,_,_,Usuarios,_],USn):-
+    USn = Usuarios.
+
+selectorPublicaciones([_,_,_,_,Publicaciones],PSn):-
+    PSn = Publicaciones.
+
+%---------------------------------------------------------------------
+
+% CONSTRUCTOR PUBLICACIONES
+
+publicaciones(ID,[DD,MM,AAAA],Autor,Tipo,Contenido,OutP):-
+    integer(ID),
+    isDate(DD,MM,AAAA),
+    string(Autor),
+    string(Tipo),
+    string(Contenido),
+    OutP = [ID,[DD,MM,AAAA],Autor,Tipo,Contenido].
+
+
+%--------------------------------------------------------------------
+
+% CONSTRUCTOR USUARIO
+
+usuario(ID,Nombre,Contraseña,OutU):-
+    integer(ID),
+    string(Nombre),
+    string(Contraseña),
+    OutU = [ID,Nombre,Contraseña,[],[],[]].
+
+% ----------------------------------------------------------------------
+
+% ------------------------------ Funciones extras ----------------------
+
+/*
+ * Dominio: Lista X integer
+ * Meta Principal: Calcular el largo de una lista
+ * Recursion: natural
+ */
+
+tamanoLista([],0).
+tamanoLista([_|COLA],NUMERO) :- tamanoLista(COLA,M), NUMERO is M+1.
+
+/*
+ * Dominio: Lista X integer
+ * Meta Principal: Corroborar la existencia de un ID
+ * Recursion: cola
+ */
+
+existeIdU([ID,_,_,_,_,_|_],IdU):-!.
+existeIdU([_|Cola],ID):- existeIdU(Cola,ID).
+% ------------------------------ BLOQUE PRIINCIPAL ---------------------
+
+% REGISTER
+
+socialNetworkRegister(Sn,[DD,MM,AAAA],Username,Password,OutSn):-
+    selectorPublicacion(Sn,Publicacion),
+    tamanoLista(Publicacion,ID),IDF is ID+1,
+    existeIdU(Sn,IDF),
+    selectorNombre(Sn,Nombre),
+    selectorFecha(Sn,Fecha),
+    selectorUActivo(Sn,Activo),
+    selectorUsuarios(Sn,UsuariosI),
+    usuario(IDF,Username,Password,Usuario),
+    append(UsuariosI,[Usuario],Usuarios),
+    selectorPublicaciones(Sn,Publicaciones),
+    OutSn = [Nombre,Fecha,Activo,Usuarios,Publicaciones].
+
