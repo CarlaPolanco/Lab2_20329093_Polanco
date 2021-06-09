@@ -92,6 +92,16 @@ usuario(ID,Nombre,Contraseña,OutU):-
 
 % ----------------------------------------------------------------------
 
+% CONSTRUCTOR USUARIO ACTIVO
+
+usuarioActivo(Nombre,Contraseña,OutU):-
+    string(Nombre),
+    string(Contraseña),
+    OutU = [Nombre,Contraseña].
+
+% ----------------------------------------------------------------------
+
+
 % ------------------------------ Funciones extras ----------------------
 
 /*
@@ -111,12 +121,21 @@ tamanoLista([_|COLA],NUMERO) :- tamanoLista(COLA,M), NUMERO is M+1.
 
 existeIdU([ID,_,_,_,_,_|_],IdU):-!.
 existeIdU([_|Cola],ID):- existeIdU(Cola,ID).
+
+/*
+ * Dominio: lista usuario x string x string
+ * Meta principal: verificar si existe el usuario registrado
+ * Recursion: cola
+*/
+existeUsuario([[_,Nombre,Contraseña,_,_,_]|_],Nombre,Contraseña):-!.
+existeUsuario([_|C],Nombre,Contraseña):- existeUsuario(C,Nombre,Contraseña).
+
 % ------------------------------ BLOQUE PRIINCIPAL ---------------------
 
 % REGISTER
 
 socialNetworkRegister(Sn,[DD,MM,AAAA],Username,Password,OutSn):-
-    selectorPublicacion(Sn,Publicacion),
+    selectorPublicaciones(Sn,Publicacion),
     tamanoLista(Publicacion,ID),IDF is ID+1,
     existeIdU(Sn,IDF),
     selectorNombre(Sn,Nombre),
@@ -128,3 +147,12 @@ socialNetworkRegister(Sn,[DD,MM,AAAA],Username,Password,OutSn):-
     selectorPublicaciones(Sn,Publicaciones),
     OutSn = [Nombre,Fecha,Activo,Usuarios,Publicaciones].
 
+% LOGIN
+
+socialNetworkLogin(Sn,Username,Password,OutSn):-selectorUsuarios(Sn,Usuarios),
+    existeUsuario(Usuarios,Username,Password),
+    selectorNombre(Sn,Nombre),
+    selectorFecha(Sn,Fecha),
+    usuarioActivo(Username,Password,Activo),
+    selectorPublicaciones(Sn,Publicaciones),
+    OutSn = [Nombre,Fecha,Activo,Usuarios,Publicaciones].
