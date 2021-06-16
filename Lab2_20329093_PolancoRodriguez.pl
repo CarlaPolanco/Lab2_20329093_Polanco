@@ -1,10 +1,10 @@
 /* ------------------------------- TDAs --------------------------------------------
  * TDAUsuarioA=[Nombre,contraseña]
- *TDAUsuarios=[ID,nombre,Contraseña,[Seguidores],[QuienMesigue],[PCompartidasConmigo]]
+ *TDAUsuarios=[ID,Fecha,nombre,Contraseña,[Seguidores],[QuienMesigue],[PCompartidasConmigo]]
  *TDAPublicacion=[ID,Date,Autor,Tipo,Contenido]
  *TDAlistaUsuarios=[[username1,pass1],[usernarme2,pass2],...,[usernameN,passN]]
  *TDAlistaPublicacion=[[TDAPublicacion1],[TDAPublicacion2],...,[TDAPublicaionN]]
- *TDASOCIALNETWORK=[Date,nombre,[TDAUsuarioA],[TDAlistaUsuarios],[TDAlistaPublicacion]],SOut]
+ *TDASOCIALNETWORK=[Nombre,Date,[TDAUsuarioA],[TDAlistaUsuarios],[TDAlistaPublicacion]],SOut]
  *PCompartidasConmigo=[[TDAPublicacion1],[TDAPublicacion2],...,[TDAPublicacionN]]
  *Date=[dd,mm,aaaa]
  */
@@ -36,10 +36,10 @@ socialnetwork(Nombre,[DD,MM,AAAA],Sout):-
 
 % PERTENENCIA SOCIALNETWORK
 
-isSocialNetwork(Nombre,[DD,MM,AAAA],UsuarioActivo,Usuarios,Publicaciones):-
-    string(Nombre),
-    isDate(DD,MM,AAAA),
-    isUsuarioActivo(UsuarioActivo).
+% isSocialNetwork(Nombre,[DD,MM,AAAA],UsuarioActivo,Usuarios,Publicaciones):-
+    %string(Nombre),
+    %isDate(DD,MM,AAAA),
+    %isUsuarioActivo(UsuarioActivo).
 
 isDate(DD,MM,AAAA):-
     integer(DD),
@@ -84,11 +84,12 @@ publicaciones(ID,[DD,MM,AAAA],Autor,Tipo,Contenido,OutP):-
 
 % CONSTRUCTOR USUARIO
 
-usuario(ID,Nombre,Contraseña,OutU):-
+usuario(ID,[DD,MM,AAAA],Nombre,Contraseña,OutU):-
     integer(ID),
     string(Nombre),
     string(Contraseña),
-    OutU = [ID,Nombre,Contraseña,[],[],[]].
+    isDate(DD,MM,AAAA),
+    OutU = [ID,[DD,MM,AAAA],Nombre,Contraseña,[],[],[]].
 
 % ----------------------------------------------------------------------
 
@@ -98,6 +99,13 @@ usuarioActivo(Nombre,Contraseña,OutU):-
     string(Nombre),
     string(Contraseña),
     OutU = [Nombre,Contraseña].
+
+% SELECTOR USUARIO ACTIVO
+
+selectorNombreUA([U|_],Nombre):-
+    string(U),
+    Nombre = U.
+
 
 % ----------------------------------------------------------------------
 
@@ -114,45 +122,84 @@ tamanoLista([],0).
 tamanoLista([_|COLA],NUMERO) :- tamanoLista(COLA,M), NUMERO is M+1.
 
 /*
- * Dominio: Lista X integer
- * Meta Principal: Corroborar la existencia de un ID
- * Recursion: cola
- */
-
-existeIdU([ID,_,_,_,_,_|_],IdU):-!.
-existeIdU([_|Cola],ID):- existeIdU(Cola,ID).
-
-/*
  * Dominio: lista usuario x string x string
  * Meta principal: verificar si existe el usuario registrado
  * Recursion: cola
 */
-existeUsuario([[_,Nombre,Contraseña,_,_,_]|_],Nombre,Contraseña):-!.
+existeUsuario([[_,_,Nombre,Contraseña,_,_,_]|_],Nombre,Contraseña):-!.
 existeUsuario([_|C],Nombre,Contraseña):- existeUsuario(C,Nombre,Contraseña).
+
+/*
+ * Dominio: listaUsuarios x integer x listaSalida
+ * Meta principal: Agrega el id de la publicacion creada al usuario
+ * Recursion: cola
+*/
+usuarioEditado([],_,_):-!.
+usuarioEditado([ID,[DD,MM,AAAA],Nombre,Contraseña,Seguidores,QuienSigue,PCConmigo|Cola],IDP,UsuarioE):-
+    ID=IDP,
+    append(PCConmigo,[ID],PCConmigoF),
+    UsuarioE =[ID,[DD,MM,AAAA],Nombre,Contraseña,Seguidores,QuienSigue,PCConmigoF],
+    usuarioEditado(Cola,IDP,UsuarioE).
+
 
 % ------------------------------ BLOQUE PRIINCIPAL ---------------------
 
 % REGISTER
+%Comprobar socialnetwork
 
 socialNetworkRegister(Sn,[DD,MM,AAAA],Username,Password,OutSn):-
-    selectorPublicaciones(Sn,Publicacion),
-    tamanoLista(Publicacion,ID),IDF is ID+1,
-    existeIdU(Sn,IDF),
+    isDate(DD,MM,AAAA),
+    string(Username),
+    string(Password),
     selectorNombre(Sn,Nombre),
-    selectorFecha(Sn,Fecha),
     selectorUActivo(Sn,Activo),
     selectorUsuarios(Sn,UsuariosI),
-    usuario(IDF,Username,Password,Usuario),
+    not(existeUsuario(UsuariosI,Username,Password)),
+    selectorFecha(Sn,Fecha),
+    tamanoLista(UsuariosI,ID),IDF is ID+1,
+    usuario(IDF,[DD,MM,AAAA],Username,Password,Usuario),
     append(UsuariosI,[Usuario],Usuarios),
     selectorPublicaciones(Sn,Publicaciones),
     OutSn = [Nombre,Fecha,Activo,Usuarios,Publicaciones].
 
 % LOGIN
+%Comprobar socialnetwork
 
-socialNetworkLogin(Sn,Username,Password,OutSn):-selectorUsuarios(Sn,Usuarios),
+socialNetworkLogin(Sn,Username,Password,OutSn):-
+    string(Username),
+    string(Password),
+    selectorUsuarios(Sn,Usuarios),
     existeUsuario(Usuarios,Username,Password),
     selectorNombre(Sn,Nombre),
     selectorFecha(Sn,Fecha),
+    selectorUActivo(Sn,LusuarioA),
+    LusuarioA == [],
     usuarioActivo(Username,Password,Activo),
     selectorPublicaciones(Sn,Publicaciones),
     OutSn = [Nombre,Fecha,Activo,Usuarios,Publicaciones].
+
+% POST
+% post para añadir el post a mismo usuario activo
+
+socialNetworkPost(Sn,[DD,MM,AAAA],Texto,[],OutSn):-
+    isDate(DD,MM,AAAA),
+    string(Texto),
+    selectorNombre(Sn,Nombre),
+    selectorFecha(Sn,Fecha),
+    selectorUActivo(Sn,LusuarioA),
+    selectorUsuarios(Sn,Usuarios),
+    selectorPublicaciones(Sn,Publicaciones),
+    tamanoLista(Publicaciones,ID),IDF is ID+1,
+    selectorNombreUA(LusuarioA,Autor),
+    publicaciones(IDF,[DD,MM,AAAA],Autor,"Texto",Texto,PublicacionF),
+    append(Publicaciones,[PublicacionF],PublicacionesFF),
+    usuarioEditado(Usuarios,IDF,UsuarioE),
+    eliminarUsuaio(),
+    OutSn=[Nombre,Fecha,[],UsuariosFF,PublicacionesFF].
+
+
+/*
+ Ejemplo:
+ socialnetwork("FB", [10,10,2010], SN), socialNetworkRegister(SN, [10,10,2010], "user1", "pass1", SN1), socialNetworkRegister(SN1, [10,10,2010], "user2", "pass2", SN2), socialNetworkRegister(SN2, [10,10,2010], "user3", "pass3", SN3),socialNetworkLogin(SN3,"user2","pass2",SN4),socialNetworkLogin(SN3,"user1","pass1",SN4).
+
+*/
