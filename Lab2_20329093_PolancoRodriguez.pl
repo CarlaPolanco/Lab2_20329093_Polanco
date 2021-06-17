@@ -194,36 +194,67 @@ socialNetworkPost(Sn,[DD,MM,AAAA],Texto,[],OutSn):-
     selectorNombreUA(LusuarioA,Autor),
     publicaciones(IDF,[DD,MM,AAAA],Autor,"Texto",Texto,PublicacionF),
     append(Publicaciones,[PublicacionF],PublicacionesFF),
-    usuarioEditado(Usuarios,IDF,UsuarioE),
-    eliminarUsuaio(),
-    OutSn=[Nombre,Fecha,[],UsuariosFF,PublicacionesFF].
+    encontrarUsuario(Usuarios,Autor,UsuarioF),
+    editarUsuarioID(UsuarioF,IDF,UsuarioFF),
+    cambiar(UsuarioF,UsuarioFF,Usuarios,UsuariosFFF),
+    OutSn=[Nombre,Fecha,[],UsuariosFFF,PublicacionesFF].
+
+socialNetworkPost(Sn,[DD,MM,AAAA],Texto,DeseoSeguir,OutSn):-
+    isDate(DD,MM,AAAA),
+    string(Texto),
+    selectorNombre(Sn,Nombre),
+    selectorFecha(Sn,Fecha),
+    selectorUActivo(Sn,LusuarioA),
+    selectorUsuarios(Sn,Usuarios),
+    selectorPublicaciones(Sn,Publicaciones),
+    tamanoLista(Publicaciones,ID),IDF is ID+1,
+    selectorNombreUA(LusuarioA,Autor),
+    publicaciones(IDF,[DD,MM,AAAA],Autor,"Texto",Texto,PublicacionF),
+    append(Publicaciones,[PublicacionF],PublicacionesFF),
+    agregarIDPost(Usuarios,DeseoSeguir,IDF,UsuariosFFF),
+    OutSn=[Nombre,Fecha,[],UsuariosFFF,PublicacionesFF].
+
+agregarIDPost(UsuariosFFF,[],_,Salida):-
+    Salida=UsuariosFFF,
+    !,true.
+agregarIDPost(Usuarios,[Cabeza|Cola],IDF,Salida):-
+    encontrarUsuario(Usuarios,Cabeza,UsuarioF),
+    editarUsuarioID(UsuarioF,IDF,UsuarioFF),
+    cambiar(UsuarioF,UsuarioFF,Usuarios,UsuariosFFF),
+    agregarIDPost(UsuariosFFF,Cola,IDF,Salida).
 
 
-% LIKE
+
+% Follow
 
 socialNetworkFollow(Sn,Username,OutSn):-
     selectorNombre(Sn,Nombre),
     selectorFecha(Sn,Fecha),
     selectorUActivo(Sn,LusuarioA),
-    selectorNombreUA(LusuarioA,Nombre),
+    selectorNombreUA(LusuarioA,NombreA),
     selectorUsuarios(Sn,Usuarios),
     selectorPublicaciones(Sn,Publicaciones),
-    encontrarUsuario(Username,Usuarios,UsuarioF),
-    editarUsuario(UsuarioF,Username,NE),
+    encontrarUsuario(Usuarios,Username,UsuarioF),
+    editarUsuario(UsuarioF,NombreA,NE),
     cambiar(UsuarioF,NE,Usuarios,UsuariosFF),
-    Username\= Nombre,
+    Username\= NombreA,
     OutSn = [Nombre,Fecha,[],UsuariosFF,Publicaciones].
 
 cambiar(E,NE,[E],[NE]):-!.
 cambiar(E,NE,[E|Es],[NE|Es]):-!.
 cambiar(E,NE,[Q|Es],[Q|NEs]):-cambiar(E,NE,Es,NEs).
 
-encontrarUsuario([ID,Fecha,Username,Pass,List,List1,List2|_],Username,[ID,Fecha,Username,Pass,List,List1,List2]):-!.
+encontrarUsuario([[ID,Fecha,Username,Pass,List,List1,List2]|_],Username,[ID,Fecha,Username,Pass,List,List1,List2]):-!.
 encontrarUsuario([_|C],Username,Usuario):-encontrarUsuario(C,Username,Usuario).
 
 editarUsuario([ID,Fecha,Nombre,Contraseña,Seguidores,QM,PCC],Username,Salida):-
     append(Seguidores,[Username],SeguidoresF),
     Salida = [ID,Fecha,Nombre,Contraseña,SeguidoresF,QM,PCC].
+
+editarUsuarioID([ID,Fecha,Nombre,Contraseña,Seguidores,QM,PCC],IDF,UsuarioFF):-
+    append(PCC,[IDF],PCCF),
+    UsuarioFF = [ID,Fecha,Nombre,Contraseña,Seguidores,QM,PCCF].
+
 
 
 
