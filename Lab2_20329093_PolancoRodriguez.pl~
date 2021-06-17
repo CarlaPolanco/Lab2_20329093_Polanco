@@ -181,7 +181,7 @@ socialNetworkLogin(Sn,Username,Password,OutSn):-
 
 % POST
 % post para añadir el post a mismo usuario activo
-
+/*
 socialNetworkPost(Sn,[DD,MM,AAAA],Texto,[],OutSn):-
     isDate(DD,MM,AAAA),
     string(Texto),
@@ -197,7 +197,7 @@ socialNetworkPost(Sn,[DD,MM,AAAA],Texto,[],OutSn):-
     usuarioEditado(Usuarios,IDF,UsuarioE),
     eliminarUsuaio(),
     OutSn=[Nombre,Fecha,[],UsuariosFF,PublicacionesFF].
-
+*/
 
 % LIKE
 
@@ -219,7 +219,7 @@ cambiar(E,NE,[E|Es],[NE|Es]):-!.
 cambiar(E,NE,[Q|Es],[Q|NEs]):-cambiar(E,NE,Es,NEs).
 
 encontrarUsuario([ID,Fecha,Username,Pass,List,List1,List2|_],Username,[ID,Fecha,Username,Pass,List,List1,List2]):-!.
-encontrarUsuario([_|C],Username,Usuario):-encontrarUsuario(C,Username,Usuario).
+encontrarUsuario([_|C],Username,Usuario):- encontrarUsuario(C,Username,Usuario).
 
 editarUsuario([ID,Fecha,Nombre,Contraseña,Seguidores,QM,PCC],Username,Salida):-
     append(Seguidores,[Username],SeguidoresF),
