@@ -1,6 +1,6 @@
 /* ------------------------------- TDAs --------------------------------------------
  * TDAUsuarioA=[Nombre,contraseña]
- *TDAUsuarios=[ID,Fecha,nombre,Contraseña,[Seguidores],[QuienMesigue],[PCompartidasConmigo]]
+ *TDAUsuarios=[ID,Fecha,nombre,Contraseña,[Seguidores],[PublicacionesMias],[PCompartidasConmigo]]
  *TDAPublicacion=[ID,Date,Autor,Tipo,Contenido]
  *TDAlistaUsuarios=[[username1,pass1],[usernarme2,pass2],...,[usernameN,passN]]
  *TDAlistaPublicacion=[[TDAPublicacion1],[TDAPublicacion2],...,[TDAPublicaionN]]
@@ -188,6 +188,7 @@ socialNetworkPost(Sn,[DD,MM,AAAA],Texto,[],OutSn):-
     selectorNombre(Sn,Nombre),
     selectorFecha(Sn,Fecha),
     selectorUActivo(Sn,LusuarioA),
+    not(LusuarioA == []),
     selectorUsuarios(Sn,Usuarios),
     selectorPublicaciones(Sn,Publicaciones),
     tamanoLista(Publicaciones,ID),IDF is ID+1,
@@ -205,6 +206,7 @@ socialNetworkPost(Sn,[DD,MM,AAAA],Texto,DeseoSeguir,OutSn):-
     selectorNombre(Sn,Nombre),
     selectorFecha(Sn,Fecha),
     selectorUActivo(Sn,LusuarioA),
+    not(LusuarioA == []),
     selectorUsuarios(Sn,Usuarios),
     selectorPublicaciones(Sn,Publicaciones),
     tamanoLista(Publicaciones,ID),IDF is ID+1,
@@ -220,8 +222,8 @@ agregarIDPost(UsuariosFFF,[],_,Salida):-
 agregarIDPost(Usuarios,[Cabeza|Cola],IDF,Salida):-
     encontrarUsuario(Usuarios,Cabeza,UsuarioF),
     editarUsuarioID(UsuarioF,IDF,UsuarioFF),
-    cambiar(UsuarioF,UsuarioFF,Usuarios,Salida),
-    agregarPublicacion(Salida,Cola,IDF,Salida).
+    cambiar(UsuarioF,UsuarioFF,Usuarios,UsuariosFFF),
+    agregarIDPost(UsuariosFFF,Cola,IDF,Salida).
 
 
 
@@ -255,11 +257,34 @@ editarUsuarioID([ID,Fecha,Nombre,Contraseña,Seguidores,QM,PCC],IDF,UsuarioFF):-
     append(PCC,[IDF],PCCF),
     UsuarioFF = [ID,Fecha,Nombre,Contraseña,Seguidores,QM,PCCF].
 
+% SHARE
+
+socialNetworkShare(Sn,[DD,MM,AAAA],PostId,[],OutSn):-
+    isDate(DD,MM,AAAA),
+    %not(LusuarioA == []),
+    selectorNombre(Sn,Nombre),
+    selectorFecha(Sn,Fecha),
+    selectorUActivo(Sn,LusuarioA),
+    selectorNombreUA(LusuarioA,NombreA),
+    selectorUsuarios(Sn,Usuarios),
+    selectorPublicaciones(Sn,Publicaciones),
+    encontrarUsuario(Usuarios,NombreA,UsuarioF),
+    editarUsuarioIDShare(UsuarioF,PostId,NE),
+    cambiar(UsuarioF,NE,Usuarios,UsuariosFF),
+    OutSn = [Nombre,Fecha,[],UsuariosFF,Publicaciones].
+
+editarUsuarioIDShare([ID,Fecha,Nombre,Contraseña,Seguidores,QM,PCC],IDF,UsuarioFF):-
+    append(QM,[IDF],QMF),
+    UsuarioFF = [ID,Fecha,Nombre,Contraseña,Seguidores,QMF,PCC].
 
 
 
 /*
  Ejemplo:
- socialnetwork("FB", [10,10,2010], SN), socialNetworkRegister(SN, [10,10,2010], "user1", "pass1", SN1), socialNetworkRegister(SN1, [10,10,2010], "user2", "pass2", SN2), socialNetworkRegister(SN2, [10,10,2010], "user3", "pass3", SN3),socialNetworkLogin(SN3,"user2","pass2",SN4),socialNetworkLogin(SN3,"user1","pass1",SN4).
+ socialnetwork("FB", [10,10,2010], SN), socialNetworkRegister(SN, [10,10,2010], "user1", "pass1", SN1), socialNetworkRegister(SN1, [10,10,2010], "user2", "pass2", SN2), socialNetworkRegister(SN2, [10,10,2010], "user3", "pass3", SN3),socialNetworkLogin(SN3,"user2","pass2",SN4).
+
+socialnetwork("FB", [10,10,2010], SN), socialNetworkRegister(SN, [10,10,2010], "user1", "pass1", SN1), socialNetworkRegister(SN1, [10,10,2010], "user2", "pass2", SN2), socialNetworkRegister(SN2, [10,10,2010], "user3", "pass3", SN3),socialNetworkLogin(SN3,"user3","pass3",SN4),socialNetworkPost(SN4,[8,11,1999],"Esta es una prueba",[],SN5),socialNetworkLogin(SN5,"user3","pass3",SN6),socialNetworkPost(SN6,[23,12,2008],"Probando como funciona esta vaina",["user2","user1"],SN7),socialNetworkLogin(SN7,"user1","pass1",SN8),socialNetworkShare(SN8,[22,10,2005],1,[],SN9).
+
+socialnetwork("FB", [10,10,2010], SN), socialNetworkRegister(SN, [10,10,2010], "user1", "pass1", SN1), socialNetworkRegister(SN1, [10,10,2010], "user2", "pass2", SN2), socialNetworkRegister(SN2, [10,10,2010], "user3", "pass3", SN3),socialNetworkLogin(SN3,"user3","pass3",SN4),socialNetworkPost(SN4,[8,11,1999],"Esta es una prueba",[],SN5),socialNetworkLogin(SN5,"user3","pass3",SN6),socialNetworkPost(SN6,[23,12,2008],"Probando como funciona esta vaina",["user2","user1"],SN7),socialNetworkLogin(SN7,"user3","pass3",SN8),selectorUsuarios(SN8,Usuarios),selectorUActivo(SN8,LusuarioA),selectorNombreUA(LusuarioA,NombreA),encontrarUsuario(Usuarios,NombreA,UsuarioEncontrado),editarUsuarioIDShare(UsuarioEncontrado,2,NU),cambiar(UsuarioEncontrado,NU,Usuarios,UsuariosFinalesListos).
 
 */
