@@ -1,7 +1,7 @@
 /* ------------------------------- TDAs --------------------------------------------
  * TDAUsuarioA=[Nombre,contraseña]
  *TDAUsuarios=[ID,Fecha,nombre,Contraseña,[Seguidores],[PublicacionesMias],[PCompartidasConmigo]]
- *TDAPublicacion=[ID,Date,Autor,Tipo,Contenido]
+ *TDAPublicacion=[ID,Date,Autor,Tipo,Contenido,[VecesCompartido]]
  *TDAlistaUsuarios=[[username1,pass1],[usernarme2,pass2],...,[usernameN,passN]]
  *TDAlistaPublicacion=[[TDAPublicacion1],[TDAPublicacion2],...,[TDAPublicaionN]]
  *TDASOCIALNETWORK=[Nombre,Date,[TDAUsuarioA],[TDAlistaUsuarios],[TDAlistaPublicacion]],SOut]
@@ -77,7 +77,7 @@ publicaciones(ID,[DD,MM,AAAA],Autor,Tipo,Contenido,OutP):-
     string(Autor),
     string(Tipo),
     string(Contenido),
-    OutP = [ID,[DD,MM,AAAA],Autor,Tipo,Contenido].
+    OutP = [ID,[DD,MM,AAAA],Autor,Tipo,Contenido,[]].
 
 
 %--------------------------------------------------------------------
@@ -261,7 +261,7 @@ editarUsuarioID([ID,Fecha,Nombre,Contraseña,Seguidores,QM,PCC],IDF,UsuarioFF):-
 
 socialNetworkShare(Sn,[DD,MM,AAAA],PostId,[],OutSn):-
     isDate(DD,MM,AAAA),
-    %not(LusuarioA == []),
+    not(LusuarioA == []),
     selectorNombre(Sn,Nombre),
     selectorFecha(Sn,Fecha),
     selectorUActivo(Sn,LusuarioA),
@@ -271,12 +271,47 @@ socialNetworkShare(Sn,[DD,MM,AAAA],PostId,[],OutSn):-
     encontrarUsuario(Usuarios,NombreA,UsuarioF),
     editarUsuarioIDShare(UsuarioF,PostId,NE),
     cambiar(UsuarioF,NE,Usuarios,UsuariosFF),
-    OutSn = [Nombre,Fecha,[],UsuariosFF,Publicaciones].
+    DateShare = [[DD,MM,AAAA],NombreA],
+    encontrarPublicacion(Publicaciones,PostId,Publicacion),
+    editarPublicacion(Publicacion,DateShare,PublicacionEdit),
+    cambiar(Publicacion,PublicacionEdit,Publicaciones,PublicacionesF),
+    OutSn = [Nombre,Fecha,[],UsuariosFF,PublicacionesF].
 
 editarUsuarioIDShare([ID,Fecha,Nombre,Contraseña,Seguidores,QM,PCC],IDF,UsuarioFF):-
     append(QM,[IDF],QMF),
     UsuarioFF = [ID,Fecha,Nombre,Contraseña,Seguidores,QMF,PCC].
 
+editarPublicacion([ID,Date,Autor,Tipo,Contenido,Compartida],List,PublicacionEdit):-
+    append(Compartida,List,Compartida2),
+    PublicacionEdit = [ID,Date,Autor,Tipo,Contenido,Compartida2].
+
+encontrarPublicacion([[ID,Date,Autor,Tipo,Contenido,Compartida]|_],ID,[ID,Date,Autor,Tipo,Contenido,Compartida]):-!.
+encontrarPublicacion([_|C],ID,Usuario):-encontrarPublicacion(C,ID,Usuario).
+
+socialNetworkShare(Sn,[DD,MM,AAAA],PostId,Acompartir,OutSn):-
+    isDate(DD,MM,AAAA),
+    not(LusuarioA == []),
+    selectorNombre(Sn,Nombre),
+    selectorFecha(Sn,Fecha),
+    selectorUActivo(Sn,LusuarioA),
+    selectorUsuarios(Sn,Usuarios),
+    selectorPublicaciones(Sn,Publicaciones),
+    agregarIDShare(Usuarios,Acompartir,PostId,UsuariosFF),
+    DateShare = [[DD,MM,AAAA],Acompartir],
+    encontrarPublicacion(Publicaciones,PostId,Publicacion),
+    editarPublicacion(Publicacion,DateShare,PublicacionEdit),
+    cambiar(Publicacion,PublicacionEdit,Publicaciones,PublicacionesF),
+    OutSn = [Nombre,Fecha,[],UsuariosFF,PublicacionesF].
+
+
+agregarIDShare(UsuariosFFF,[],_,Salida):-
+    Salida=UsuariosFFF,
+    !,true.
+agregarIDShare(Usuarios,[Cabeza|Cola],PostId,Salida):-
+    encontrarUsuario(Usuarios,Cabeza,UsuarioF),
+    editarUsuarioIDShare(UsuarioF,PostId,NE),
+    cambiar(UsuarioF,NE,Usuarios,UsuariosF),
+    agregarIDShare(UsuariosF,Cola,PostId,Salida).
 
 
 /*
