@@ -110,7 +110,7 @@ selectorNombreUA([U|_],Nombre):-
 % ----------------------------------------------------------------------
 
 
-% ------------------------------ Funciones extras ----------------------
+    % ------------------------------ Funciones extras ----------------------
 
 /*
  * Dominio: Lista X integer
@@ -312,6 +312,141 @@ agregarIDShare(Usuarios,[Cabeza|Cola],PostId,Salida):-
     editarUsuarioIDShare(UsuarioF,PostId,NE),
     cambiar(UsuarioF,NE,Usuarios,UsuariosF),
     agregarIDShare(UsuariosF,Cola,PostId,Salida).
+
+% -------------------------------- TO STRING ---------------------------
+
+socialNetworkToString(Sn,SnOut):-
+    selectorUActivo(Sn,Activo),
+    socialNetworkString(Sn,Activo,SnOut).
+
+
+
+socialNetworkString([Nombre,Fecha,_,ListaU,ListaP],[],Snout):-
+    string_concat("NOMBRE RED SOCIAL: ",Nombre,A),
+    string_concat(A,"\n",B),
+    date(Fecha,C),
+    string_concat("FECHA DE CREACION: ",C,D),
+    string_concat(D,"\n",E),
+    string_concat(B,E,F),
+    listaUsuarioString(ListaU,G),
+    string_concat(F,G,H),
+    listaPublicacionesString(ListaP,I),
+    string_concat(H,I,Snout).
+
+socialNetworkString([Nombre,Fecha,_,ListaU,ListaP],Ua,Snout):-
+    string_concat("NOMBRE RED SOCIAL: ",Nombre,A),
+    string_concat(A,"\n",B),
+    date(Fecha,C),
+    string_concat("FECHA DE CREACION: ",C,D),
+    string_concat(D,"\n",E),
+    string_concat(B,E,F),
+    usuarioActivoToString(Ua,J),
+    string_concat(F,J,M),
+    listaUsuarioString(ListaU,G),
+    string_concat(M,G,H),
+    listaPublicacionesString(ListaP,I),
+    string_concat(H,I,Snout).
+
+
+
+ /*
+ * Dominio: lista de usuarios x string
+ * Meta principal: tranformar la lista de usuarios en un string
+ * Recursion: Natural.
+*/
+
+listaUsuarioString([]," "):-!.
+listaUsuarioString([H|T],String):-
+    usuarioString(H,S1),listaUsuarioString(T,S2),string_concat(S1,S2,String).
+
+/*
+ * Dominio: Usuarios x String
+ * Meta principal: tranformar un usuario en un string
+ * Recursion:-.
+*/
+
+usuarioString([ID,[DD,MM,AAAA],Nombre,Contraseña,Seguidores,PublicacionesMias,PublicacionesCompartidas],String):-
+    number_string(ID,A),
+    number_string(DD,B),string_concat(A," ",B),
+    number_string(MM,D),string_concat(B," ",D),
+    number_string(AAAA,E),string_concat(D," ",E),
+    string_concat(E,Nombre,F),
+    string_concat(F,Contraseña,G),
+    publicacionesListaSeguidoresE(Seguidores,H),
+    string_concat(G,H,I),
+    publicacionesListaE(PublicacionesMias,J),
+    string_concat(I,J,K),
+    publicacionesListaE(PublicacionesCompartidas,L),
+    string_concat(K,L,M),
+    string_concat(M,"\n",String).
+
+ /*
+ * Dominio: lista de Publicaciones x string
+ * Meta principal: tranformar la lista de publicacio en un string
+ * Recursion: Natural.
+*/
+
+publicacionesListaE([]," "):-!.
+publicacionesListaE([H|T],String):-
+    publicacionesListas(H,S1),publicacionesListaE(T,S2),string_concat(S1,S2,String).
+
+publicacionesListas([ID],String):-
+     number_string(ID,A),
+     string_concat(A," ",String).
+
+publicacionesListaSeguidoresE([]," "):-!.
+publicacionesListaSeguidoresE([H|T],String):-
+    publicacionesListasS(H,S1),publicacionesListaSeguidoresE(T,S2),string_concat(S1,S2,String).
+
+publicacionesListasS([User],String):-
+     string_concat(User," ",String).
+
+
+listaPublicacionesString([ ]," "):-!.
+listaPublicacionesString([H|T],String):-
+    publicacionString(H,S1),listaPublicacionesString(T,S2),string_concat(S1,S2,String).
+
+publicacionString([ID,Date,Autor,Tipo,Contenido,Compartido],String):-
+    number_string(ID,A),
+    string_concat(A," ",B),
+    date(Date,C),
+    string_concat(B," ",C),
+    string_concat(C,Autor,D),
+    string_concat(D," ",E),
+    string_concat(E,Tipo,F),
+    string_concat(F," ",G),
+    string_concat(G,Contenido,H),
+    string_concat(H," ",I),
+    listaCompartidoE(Compartido,K),
+    string_concat(I,K,String).
+
+date([DD,MM,AAAA],String):-
+    number_string(DD,A),
+    number_string(MM,B),
+    number_string(AAAA,C),
+    string_concat(A," ",D),
+    string_concat(B," ",E),
+    string_concat(C," ",F),
+    string_concat(D,E,G),
+    string_concat(G,F,String).
+
+listaCompartidoE([]," "):-!.
+listaCompartidoE([H|T],String):-
+    listaCompartido(H,S1),listaCompartidoE(T,S2),string_concat(S1,S2,String).
+
+listaCompartido([[DD,MM,AAAA],Nombre],String):-
+     date([DD,MM,AAAA],A),
+     string_concat(A," ",B),
+     string_concat(B,Nombre,String).
+
+
+usuarioActivoToString([],_):-!.
+usuarioActivoToString([Nombre,Contraseña],String):-
+    string_concat(Nombre," ",A),
+    string_concat(A,Contraseña,B),
+    string_concat(B," ",String).
+
+
 
 
 /*
