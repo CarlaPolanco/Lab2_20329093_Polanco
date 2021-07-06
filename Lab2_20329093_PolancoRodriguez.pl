@@ -161,7 +161,7 @@ socialNetworkRegister(Sn,[DD,MM,AAAA],Username,Password,OutSn):-
     usuario(IDF,[DD,MM,AAAA],Username,Password,Usuario),
     append(UsuariosI,[Usuario],Usuarios),
     selectorPublicaciones(Sn,Publicaciones),
-    OutSn = [Nombre,Fecha,Activo,Usuarios,Publicaciones].
+    OutSn = [Nombre,Fecha,Activo,Usuarios,Publicaciones], !.
 
 % LOGIN
 %Comprobar socialnetwork
@@ -177,7 +177,7 @@ socialNetworkLogin(Sn,Username,Password,OutSn):-
     LusuarioA == [],
     usuarioActivo(Username,Password,Activo),
     selectorPublicaciones(Sn,Publicaciones),
-    OutSn = [Nombre,Fecha,Activo,Usuarios,Publicaciones].
+    OutSn = [Nombre,Fecha,Activo,Usuarios,Publicaciones], !.
 
 % POST
 % post para añadir el post a mismo usuario activo
@@ -198,7 +198,7 @@ socialNetworkPost(Sn,[DD,MM,AAAA],Texto,[],OutSn):-
     encontrarUsuario(Usuarios,Autor,UsuarioF),
     editarUsuarioID(UsuarioF,IDF,UsuarioFF),
     cambiar(UsuarioF,UsuarioFF,Usuarios,UsuariosFFF),
-    OutSn=[Nombre,Fecha,[],UsuariosFFF,PublicacionesFF].
+    OutSn=[Nombre,Fecha,[],UsuariosFFF,PublicacionesFF], !.
 
 socialNetworkPost(Sn,[DD,MM,AAAA],Texto,DeseoSeguir,OutSn):-
     isDate(DD,MM,AAAA),
@@ -214,7 +214,7 @@ socialNetworkPost(Sn,[DD,MM,AAAA],Texto,DeseoSeguir,OutSn):-
     publicaciones(IDF,[DD,MM,AAAA],Autor,"Texto",Texto,PublicacionF),
     append(Publicaciones,[PublicacionF],PublicacionesFF),
     agregarIDPost(Usuarios,DeseoSeguir,IDF,UsuariosFFF),
-    OutSn=[Nombre,Fecha,[],UsuariosFFF,PublicacionesFF].
+    OutSn=[Nombre,Fecha,[],UsuariosFFF,PublicacionesFF], !.
 
 agregarIDPost(UsuariosFFF,[],_,Salida):-
     Salida=UsuariosFFF,
@@ -240,7 +240,7 @@ socialNetworkFollow(Sn,Username,OutSn):-
     editarUsuario(UsuarioF,NombreA,NE),
     cambiar(UsuarioF,NE,Usuarios,UsuariosFF),
     Username\= NombreA,
-    OutSn = [Nombre,Fecha,[],UsuariosFF,Publicaciones].
+    OutSn = [Nombre,Fecha,[],UsuariosFF,Publicaciones], !.
 
 cambiar(E,NE,[E],[NE]):-!.
 cambiar(E,NE,[E|Es],[NE|Es]):-!.
@@ -259,6 +259,18 @@ editarUsuarioID([ID,Fecha,Nombre,Contraseña,Seguidores,QM,PCC],IDF,UsuarioFF):-
 
 % SHARE
 
+
+editarUsuarioIDShare([ID,Fecha,Nombre,Contraseña,Seguidores,QM,PCC],IDF,UsuarioFF):-
+    append(QM,[IDF],QMF),
+    UsuarioFF = [ID,Fecha,Nombre,Contraseña,Seguidores,QMF,PCC].
+
+editarPublicacion([ID,Date,Autor,Tipo,Contenido,Compartida],List,PublicacionEdit):-
+    append(Compartida,[List],Compartida2),
+    PublicacionEdit = [ID,Date,Autor,Tipo,Contenido,Compartida2].
+
+encontrarPublicacion([[ID,Date,Autor,Tipo,Contenido,Compartida]|_],ID,[ID,Date,Autor,Tipo,Contenido,Compartida]):-!.
+encontrarPublicacion([_|C],ID,Usuario):-encontrarPublicacion(C,ID,Usuario).
+
 socialNetworkShare(Sn,[DD,MM,AAAA],PostId,[],OutSn):-
     isDate(DD,MM,AAAA),
     not(LusuarioA == []),
@@ -275,18 +287,7 @@ socialNetworkShare(Sn,[DD,MM,AAAA],PostId,[],OutSn):-
     encontrarPublicacion(Publicaciones,PostId,Publicacion),
     editarPublicacion(Publicacion,DateShare,PublicacionEdit),
     cambiar(Publicacion,PublicacionEdit,Publicaciones,PublicacionesF),
-    OutSn = [Nombre,Fecha,[],UsuariosFF,PublicacionesF].
-
-editarUsuarioIDShare([ID,Fecha,Nombre,Contraseña,Seguidores,QM,PCC],IDF,UsuarioFF):-
-    append(QM,[IDF],QMF),
-    UsuarioFF = [ID,Fecha,Nombre,Contraseña,Seguidores,QMF,PCC].
-
-editarPublicacion([ID,Date,Autor,Tipo,Contenido,Compartida],List,PublicacionEdit):-
-    append(Compartida,List,Compartida2),
-    PublicacionEdit = [ID,Date,Autor,Tipo,Contenido,Compartida2].
-
-encontrarPublicacion([[ID,Date,Autor,Tipo,Contenido,Compartida]|_],ID,[ID,Date,Autor,Tipo,Contenido,Compartida]):-!.
-encontrarPublicacion([_|C],ID,Usuario):-encontrarPublicacion(C,ID,Usuario).
+    OutSn = [Nombre,Fecha,[],UsuariosFF,PublicacionesF], !.
 
 socialNetworkShare(Sn,[DD,MM,AAAA],PostId,Acompartir,OutSn):-
     isDate(DD,MM,AAAA),
@@ -301,7 +302,7 @@ socialNetworkShare(Sn,[DD,MM,AAAA],PostId,Acompartir,OutSn):-
     encontrarPublicacion(Publicaciones,PostId,Publicacion),
     editarPublicacion(Publicacion,DateShare,PublicacionEdit),
     cambiar(Publicacion,PublicacionEdit,Publicaciones,PublicacionesF),
-    OutSn = [Nombre,Fecha,[],UsuariosFF,PublicacionesF].
+    OutSn = [Nombre,Fecha,[],UsuariosFF,PublicacionesF], !.
 
 
 agregarIDShare(UsuariosFFF,[],_,Salida):-
@@ -317,34 +318,38 @@ agregarIDShare(Usuarios,[Cabeza|Cola],PostId,Salida):-
 
 socialNetworkToString(Sn,SnOut):-
     selectorUActivo(Sn,Activo),
-    socialNetworkString(Sn,Activo,SnOut).
+    socialNetworkString(Sn,Activo,SnOut), !.
 
 
 
 socialNetworkString([Nombre,Fecha,_,ListaU,ListaP],[],Snout):-
-    string_concat("NOMBRE RED SOCIAL: ",Nombre,A),
-    string_concat(A,"\n",B),
+    string_concat(" \n        ******** RED SOCIAL: ",Nombre,A),
+    string_concat(A," *******",W),
+    string_concat(W,"\n",B),
     date(Fecha,C),
-    string_concat("FECHA DE CREACION: ",C,D),
+    string_concat("        FECHA DE CREACION: ",C,D),
     string_concat(D,"\n",E),
     string_concat(B,E,F),
-    listaUsuarioString(ListaU,G),
-    string_concat(F,G,H),
-    listaPublicacionesString(ListaP,I),
-    string_concat(H,I,Snout).
+    string_concat(F,"\n        ******************************************************************** USUARIOS REGISTRADOS ********************************************************************  \n",Q),
+    listaUsuarioString(ListaU,"",G),
+    string_concat(Q,G,H),
+    string_concat(H,"\n        ************************************************************************* PUBLICACIONES *************************************************************************  \n",S),
+    listaPublicacionesString(ListaP," ",I),
+    string_concat(S,I,Snout).
 
 socialNetworkString([Nombre,Fecha,_,ListaU,ListaP],Ua,Snout):-
-    string_concat("NOMBRE RED SOCIAL: ",Nombre,A),
-    string_concat(A,"\n",B),
+    string_concat(" \n        ******** RED SOCIAL: ",Nombre,A),
+    string_concat(A," ******* \n",B),
     date(Fecha,C),
-    string_concat("FECHA DE CREACION: ",C,D),
+    string_concat("        FECHA DE CREACION: ",C,D),
     string_concat(D,"\n",E),
     string_concat(B,E,F),
     usuarioActivoToString(Ua,J),
-    string_concat(F,J,M),
-    listaUsuarioString(ListaU,G),
+    string_concat("        USUARIO ACTIVO: ",J,K),
+    string_concat(F,K,M),
+    listaUsuarioString(ListaU," ",G),
     string_concat(M,G,H),
-    listaPublicacionesString(ListaP,I),
+    listaPublicacionesString(ListaP," ",I),
     string_concat(H,I,Snout).
 
 
@@ -355,9 +360,11 @@ socialNetworkString([Nombre,Fecha,_,ListaU,ListaP],Ua,Snout):-
  * Recursion: Natural.
 */
 
-listaUsuarioString([]," "):-!.
-listaUsuarioString([H|T],String):-
-    usuarioString(H,S1),listaUsuarioString(T,S2),string_concat(S1,S2,String).
+listaUsuarioString([],Aux, String):- String = Aux, !.
+listaUsuarioString([H|T],Aux, String):-
+    usuarioString(H,S1),
+    string_concat(Aux,S1,S2),
+    listaUsuarioString(T,S2,String).
 
 /*
  * Dominio: Usuarios x String
@@ -367,58 +374,115 @@ listaUsuarioString([H|T],String):-
 
 usuarioString([ID,[DD,MM,AAAA],Nombre,Contraseña,Seguidores,PublicacionesMias,PublicacionesCompartidas],String):-
     number_string(ID,A),
-    number_string(DD,B),string_concat(A," ",B),
-    number_string(MM,D),string_concat(B," ",D),
-    number_string(AAAA,E),string_concat(D," ",E),
-    string_concat(E,Nombre,F),
-    string_concat(F,Contraseña,G),
-    publicacionesListaSeguidoresE(Seguidores,H),
-    string_concat(G,H,I),
-    publicacionesListaE(PublicacionesMias,J),
-    string_concat(I,J,K),
-    publicacionesListaE(PublicacionesCompartidas,L),
-    string_concat(K,L,M),
+    string_concat("        ID: ",A,Q),
+    date([DD,MM,AAAA],C),
+    string_concat("FECHA DE REGISTRO: ",C,W),
+    string_concat(Q," ",B),
+    string_concat(B, W, D),
+    string_concat(D," ",E),
+    string_concat(E,"USERNAME: ", R),
+    string_concat(R,Nombre,F),
+    string_concat(F," PASSWORD: ", O),
+    string_concat(O,Contraseña,G),
+    publicacionesListaSeguidoresE(Seguidores,"ID: ",H),
+    string_concat(" SEGUIDORES: ",H,P),
+    string_concat(G,P,I),
+    publicacionesListaE(PublicacionesMias,"ID: ",J),
+    string_concat(" PUBLICACIONES MIAS: " ,J,S),
+    string_concat(I,S,K),
+    publicacionesListaE(PublicacionesCompartidas,"ID: ",L),
+    string_concat("     PUBLICACIONES COMPARTIDAS CONMIGO: ",L,T),
+    string_concat(K,T,M),
     string_concat(M,"\n",String).
 
  /*
- * Dominio: lista de Publicaciones x string
- * Meta principal: tranformar la lista de publicacio en un string
+ * Dominio: lista de ID x string
+ * Meta principal: tranformar la lista de ID de las publicaciones enString
  * Recursion: Natural.
 */
 
-publicacionesListaE([]," "):-!.
-publicacionesListaE([H|T],String):-
-    publicacionesListas(H,S1),publicacionesListaE(T,S2),string_concat(S1,S2,String).
+publicacionesListaE([],Aux,String):-String = Aux,!.
+publicacionesListaE([H|T],Aux,String):-
+    publicacionesListas(H,S1),
+    string_concat(Aux,S1,S2),
+    publicacionesListaE(T,S2,String).
 
-publicacionesListas([ID],String):-
+/*
+ * Dominio: ID x String
+ * Meta principal: tranformar un ID en un string
+ * Recursion:-.
+*/
+
+publicacionesListas(ID,String):-
      number_string(ID,A),
      string_concat(A," ",String).
 
-publicacionesListaSeguidoresE([]," "):-!.
-publicacionesListaSeguidoresE([H|T],String):-
-    publicacionesListasS(H,S1),publicacionesListaSeguidoresE(T,S2),string_concat(S1,S2,String).
+/*
+ * Dominio: lista de seguidores x string
+ * Meta principal: tranformar la lista de seguidores de la
+ *                 publicaciones en String
+ * Recursion: Natural.
+*/
 
+publicacionesListaSeguidoresE([],Aux,String):-String = Aux,!.
+publicacionesListaSeguidoresE([H|T],Aux,String):-
+    publicacionesListasS(H,S1),
+    string_concat("ID: ",Aux,Aux2),
+    string_concat(Aux2, S1,S2),
+    publicacionesListaSeguidoresE(T,S2,String).
+
+/*
+ * Dominio: User x String
+ * Meta principal: concadena todos los usuarios en un solo string
+ * Recursion:-.
+*/
 publicacionesListasS([User],String):-
      string_concat(User," ",String).
 
 
-listaPublicacionesString([ ]," "):-!.
-listaPublicacionesString([H|T],String):-
-    publicacionString(H,S1),listaPublicacionesString(T,S2),string_concat(S1,S2,String).
+
+
+ /*
+ * Dominio: lista de publicaciones x string
+ * Meta principal: tranformar la lista de Publicaciones en un string
+ * Recursion: Natural.
+*/
+
+
+listaPublicacionesString([ ],Aux,String):-String = Aux,!.
+listaPublicacionesString([H|T],Aux,String):-
+    publicacionString(H,S1),
+    string_concat(Aux,S1,S2),
+    listaPublicacionesString(T,S2,String).
+
+/*
+ * Dominio: Usuarios x String
+ * Meta principal: tranformar un usuario en un string
+ * Recursion:-.
+*/
 
 publicacionString([ID,Date,Autor,Tipo,Contenido,Compartido],String):-
-    number_string(ID,A),
-    string_concat(A," ",B),
-    date(Date,C),
-    string_concat(B," ",C),
+    number_string(ID,IDS),
+    string_concat("       ID: ", IDS,L),
+    string_concat(L," ",A),
+    date(Date,DateS),
+    string_concat(" FECHA DE CREACION: ",DateS,M),
+    string_concat(A,M,B),
+    string_concat(B," AUTOR: ",C),
     string_concat(C,Autor,D),
-    string_concat(D," ",E),
+    string_concat(D," TIPO: ",E),
     string_concat(E,Tipo,F),
-    string_concat(F," ",G),
+    string_concat(F," CONTENIDO: ",G),
     string_concat(G,Contenido,H),
-    string_concat(H," ",I),
-    listaCompartidoE(Compartido,K),
+    string_concat(H," USUARIOS COMPARTIDOS: ",I),
+    listaCompartidoE(Compartido,"",K),
     string_concat(I,K,String).
+
+/*
+ * Dominio: Lista Fecha x String
+ * Meta principal: tranformar una Fecha en un string
+ * Recursion:-.
+*/
 
 date([DD,MM,AAAA],String):-
     number_string(DD,A),
@@ -430,21 +494,42 @@ date([DD,MM,AAAA],String):-
     string_concat(D,E,G),
     string_concat(G,F,String).
 
-listaCompartidoE([]," "):-!.
-listaCompartidoE([H|T],String):-
-    listaCompartido(H,S1),listaCompartidoE(T,S2),string_concat(S1,S2,String).
+ /*
+ * Dominio: lista de Compartido [[Fecha],Username] x string
+ * Meta principal: tranformar la lista compartido en string
+ * Recursion: Natural.
+*/
 
+listaCompartidoE([],Aux,String):-String = Aux, !.
+listaCompartidoE([H|T],Aux, String):-
+    listaCompartido(H,S1),
+    string_concat(Aux, S1,S2),
+    listaCompartidoE(T,S2, String).
+
+/*
+ * Dominio: ListaCompartido x String
+ * Meta principal: tranforma una feccha y un usuario en un string
+ * Recursion:-.
+*/
 listaCompartido([[DD,MM,AAAA],Nombre],String):-
      date([DD,MM,AAAA],A),
-     string_concat(A," ",B),
-     string_concat(B,Nombre,String).
+     string_concat("FECHA COMPARTIDO",A,M),
+     string_concat(M,"USERNAME DE QUIEN LO COMPARTIO: ",B),
+     string_concat(B,Nombre,S),
+     string_concat(S,"\n ",String).
 
+/*
+ * Dominio: ListaUsuarioActivo x String
+ * Meta principal: tranforma al usuario activo en un string
+ * Recursion:-.
+*/
 
 usuarioActivoToString([],_):-!.
-usuarioActivoToString([Nombre,Contraseña],String):-
-    string_concat(Nombre," ",A),
-    string_concat(A,Contraseña,B),
-    string_concat(B," ",String).
+usuarioActivoToString([Nombre,Contrasena],String):-
+    string_concat("USERNAME: ",Nombre,A),
+    string_concat(" PASSWORD: ",Contrasena ,M),
+    string_concat(A,M,B),
+    string_concat(B,"\n",String).
 
 
 
@@ -459,4 +544,8 @@ socialnetwork("FB", [10,10,2010], SN), socialNetworkRegister(SN, [10,10,2010], "
 
 socialnetwork("FB", [10,10,2010], SN), socialNetworkRegister(SN, [10,10,2010], "user1", "pass1", SN1), socialNetworkRegister(SN1, [10,10,2010], "user2", "pass2", SN2), socialNetworkRegister(SN2, [10,10,2010], "user3", "pass3", SN3),socialNetworkLogin(SN3,"user3","pass3",SN4),socialNetworkPost(SN4,[8,11,1999],"Esta es una prueba",[],SN5),socialNetworkLogin(SN5,"user3","pass3",SN6),socialNetworkPost(SN6,[23,12,2008],"Probando como funciona esta vaina",["user2","user1"],SN7),socialNetworkLogin(SN7,"user2","pass2",SN8),socialNetworkShare(SN8,[10,10,2010],1,[],SN9).
 
+
+socialnetwork("FB", [10,10,2010], SN), socialNetworkRegister(SN, [10,10,2010], "user1", "pass1", SN1), socialNetworkRegister(SN1, [10,10,2010], "user2", "pass2", SN2), socialNetworkRegister(SN2, [10,10,2010], "user3", "pass3", SN3),socialNetworkLogin(SN3,"user3","pass3",SN4),socialNetworkPost(SN4,[8,11,1999],"Esta es una prueba",[],SN5),socialNetworkLogin(SN5,"user3","pass3",SN6),socialNetworkPost(SN6,[23,12,2008],"Probando como funciona esta vaina",["user2","user1"],SN7),socialNetworkLogin(SN7,"user2","pass2",SN8),socialNetworkShare(SN8,[10,10,2010],1,[],SN9),socialNetworkLogin(SN9,"user2","pass2",SN10),socialNetworkToString(SN10,SN11).
+
+socialnetwork("FB", [10,10,2010], SN), socialNetworkRegister(SN, [10,10,2010], "user1", "pass1", SN1), socialNetworkRegister(SN1, [10,10,2010], "user2", "pass2", SN2), socialNetworkRegister(SN2, [10,10,2010], "user3", "pass3", SN3),socialNetworkLogin(SN3,"user3","pass3",SN4),socialNetworkPost(SN4,[8,11,1999],"Esta es una prueba",[],SN5),socialNetworkLogin(SN5,"user3","pass3",SN6),socialNetworkPost(SN6,[23,12,2008],"Probando como funciona esta vaina",["user2","user1"],SN7),socialNetworkLogin(SN7,"user2","pass2",SN8),socialNetworkShare(SN8,[10,10,2010],1,[],SN9),socialNetworkToString(SN9,SN10).
 */
