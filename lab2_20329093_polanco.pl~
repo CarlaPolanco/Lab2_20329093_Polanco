@@ -4,7 +4,7 @@
  *TDAPublicacion=[ID,Date,Autor,Tipo,Contenido,[UsuariosCompartido]]
  *TDAlistaUsuarios=[[TDAUsuario1],[TDAUsuario2],...,[TDAUsuarioN]]
  *TDAlistaPublicacion=[[TDAPublicacion1],[TDAPublicacion2],...,[TDAPublicaionN]]
- *PCompartidasConmigo=[FechaQueCompartio,IdPublicacion]
+ *PCompartidasConmigo=[[IDPublicacion1],[IDPublicacion2],...,IDPublicacionN]]
  *Date=[dd,mm,aaaa]
  *TDASOCIALNETWORK=[Nombre,Date,[TDAUsuarioA],[TDAlistaUsuarios],[TDAlistaPublicacion]],SOut]
 
